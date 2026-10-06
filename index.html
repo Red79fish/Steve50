@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Steve50</title>
+
+  <style>
+    :root {
+      --fond: #111;
+      --orange: #ff5a1f;      /* couleur de la cover en cours */
+      --texte: #eee;
+      --texte-doux: #999;
+      --barre-vide: #333;
+    }
+
+    body {
+      margin: 0;
+      background: var(--fond);
+      color: var(--texte);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      padding: 20px 0;
+    }
+
+    /* ---------- Un audio ---------- */
+    .piste {
+      margin-bottom: 28px;
+    }
+
+    .cover {
+      position: relative;
+      display: block;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: none;
+      cursor: pointer;
+      outline: 3px solid transparent;
+      outline-offset: -3px;
+      transition: outline-color 0.2s;
+    }
+
+    .cover img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .cover:focus-visible {
+      outline-color: #fff;
+    }
+
+    /* Cover en cours : contour orange */
+    .piste.active .cover {
+      outline: 6px solid var(--orange);
+      outline-offset: -6px;
+    }
+
+    /* Icône lecture / pause au centre */
+    .icone {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 84px;
+      height: 84px;
+      margin: -42px 0 0 -42px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+
+    .cover:hover .icone,
+    .cover:focus-visible .icone,
+    .piste.active .icone {
+      opacity: 1;
+    }
+
+    .piste.active .icone {
+      background: var(--orange);
+    }
+
+    /* ---------- Barre de progression ---------- */
+    .lecteur {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 4px 0;
+    }
+
+    .titre {
+      padding: 8px 4px 0;
+      font-size: 15px;
+    }
+
+    .temps {
+      font-size: 13px;
+      color: var(--texte-doux);
+      font-variant-numeric: tabular-nums;
+      min-width: 92px;
+      text-align: right;
+    }
+
+    .progression {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--barre-vide);
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .progression:disabled {
+      cursor: default;
+      opacity: 0.4;
+    }
+
+    .progression::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--orange);
+      border: 0;
+    }
+
+    .progression::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--orange);
+      border: 0;
+    }
+
+    .progression:disabled::-webkit-slider-thumb { background: #666; }
+    .progression:disabled::-moz-range-thumb { background: #666; }
+
+    .erreur {
+      color: var(--orange);
+      font-size: 13px;
+      padding: 8px 4px 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cover, .icone { transition: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container" id="liste"></div>
+
+  <script>
+    /* ============================================================
+       RÉGLAGES — c'est ici que tu modifies
+       ============================================================ */
+
+    // Nombre MAXIMUM de paires cover/audio.
+    // Tu peux laisser 50 même si tu en as moins : seules les covers
+    // réellement présentes dans le dossier s'affichent.
+    const NOMBRE_AUDIOS = 50;
+
+    // Dossiers et noms des fichiers
+    const DOSSIER_COVERS = "covers/";
+    const DOSSIER_AUDIO  = "audios/";
+    // cover-001.jpg  <->  audio-001.mp3
+
+    // Titres optionnels, dans l'ordre (1re ligne = audio-001).
+    // Laisse vide ("") pour ne rien afficher sous une cover.
+    const TITRES = [
+      // "Titre de l’audio 1",
+      // "Titre de l’audio 2",
+    ];
+
+    /* ============================================================
+       NE PAS MODIFIER EN DESSOUS (sauf si tu sais ce que tu fais)
+       ============================================================ */
+
+    const liste = document.getElementById("liste");
+    const audio = new Audio();      // un seul lecteur pour toute la page
+    audio.preload = "none";
+    let audioActif = null;       // la carte en cours
+
+    function numero(n) {
+      return String(n).padStart(3, "0");  // 7 -> "007"
+    }
+
+    function formatTemps(s) {
+      if (!isFinite(s)) return "0:00";
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return m + ":" + String(sec).padStart(2, "0");
+    }
+
+    // Fabrique les cartes automatiquement
+    for (let i = 1; i <= NOMBRE_AUDIOS; i++) {
+      const num = numero(i);
+      const titre = TITRES[i - 1] || "";
+
+      const carte = document.createElement("div");
+      carte.className = "piste";
+      carte.dataset.audio = DOSSIER_AUDIO + "audio-" + num + ".mp3";
+
+      carte.innerHTML = `
+        <button class="cover" type="button" aria-label="Lire ${titre || "l’audio " + num}">
+          <img src="${DOSSIER_COVERS}cover-${num}.jpg" alt="">
+          <span class="icone" aria-hidden="true">▶</span>
+        </button>
+        ${titre ? `<div class="titre">${titre}</div>` : ""}
+        <div class="lecteur">
+          <input class="progression" type="range" min="0" max="100" step="0.1" value="0"
+                 disabled aria-label="Position dans l’audio">
+          <span class="temps">0:00 / 0:00</span>
+        </div>
+      `;
+
+      carte.querySelector(".cover").addEventListener("click", () => cliquerCover(carte));
+
+      // Avancer dans l’audio en glissant la barre
+      carte.querySelector(".progression").addEventListener("input", (e) => {
+        if (carte === audioActif && isFinite(audio.duration)) {
+          audio.currentTime = (e.target.value / 100) * audio.duration;
+        }
+      });
+
+      // Cachée tant qu'on ne sait pas si l'image existe
+      carte.hidden = true;
+      liste.appendChild(carte);
+
+      // Test : l'image existe ? -> on montre la carte. Sinon -> on la retire.
+      const test = new Image();
+      test.onload  = () => { carte.hidden = false; };
+      test.onerror = () => { carte.remove(); };
+      test.src = DOSSIER_COVERS + "cover-" + num + ".jpg";
+    }
+
+    function cliquerCover(carte) {
+      // Même cover : pause / reprise
+      if (carte === audioActif) {
+        if (audio.paused) audio.play();
+        else audio.pause();
+        return;
+      }
+
+      // Autre cover : on arrête le précédent et on remet sa barre à zéro
+      if (audioActif) {
+        audio.pause();
+        reinitialiser(audioActif);
+      }
+
+      audioActif = carte;
+      carte.classList.add("active");
+      carte.querySelector(".progression").disabled = false;
+      const ancienneErreur = carte.querySelector(".erreur");
+      if (ancienneErreur) ancienneErreur.remove();
+
+      audio.src = carte.dataset.audio;
+      audio.play().catch(() => {});
+    }
+
+    function reinitialiser(carte) {
+      carte.classList.remove("active");
+      carte.querySelector(".icone").textContent = "▶";
+      const barre = carte.querySelector(".progression");
+      barre.value = 0;
+      barre.disabled = true;
+      carte.querySelector(".temps").textContent = "0:00 / 0:00";
+    }
+
+    // Icône ▶ / ❚❚ selon l'état
+    audio.addEventListener("play", () => {
+      if (audioActif) audioActif.querySelector(".icone").textContent = "❚❚";
+    });
+    audio.addEventListener("pause", () => {
+      if (audioActif) audioActif.querySelector(".icone").textContent = "▶";
+    });
+
+    // Mise à jour de la barre et du temps
+    audio.addEventListener("timeupdate", () => {
+      if (!audioActif || !isFinite(audio.duration)) return;
+      audioActif.querySelector(".progression").value =
+        (audio.currentTime / audio.duration) * 100;
+      audioActif.querySelector(".temps").textContent =
+        formatTemps(audio.currentTime) + " / " + formatTemps(audio.duration);
+    });
+
+    // Fin de l’audio : on remet la cover à zéro
+    audio.addEventListener("ended", () => {
+      if (audioActif) reinitialiser(audioActif);
+      audioActif = null;
+    });
+
+    // Fichier mp3 introuvable
+    audio.addEventListener("error", () => {
+      if (!audioActif || !audio.src) return;
+      const carte = audioActif;
+      reinitialiser(carte);
+      audioActif = null;
+      const msg = document.createElement("div");
+      msg.className = "erreur";
+      msg.textContent = "Fichier introuvable : " + carte.dataset.audio;
+      carte.appendChild(msg);
+    });
+  </script>
+</body>
+</html>
