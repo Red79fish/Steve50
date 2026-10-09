@@ -30,6 +30,13 @@
     }
 
     /* ---------- Un audio ---------- */
+    .image-titre {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin-bottom: 28px;
+    }
+
     .piste {
       margin-bottom: 28px;
     }
@@ -163,7 +170,13 @@
 </head>
 
 <body>
-  <div class="container" id="liste"></div>
+  <div class="container">
+    <!-- Image titre : non reliée à un audio -->
+    <img class="image-titre" src="image-titre/image-titre.jpg" alt=""
+         onerror="this.remove()">
+
+    <div id="liste"></div>
+  </div>
 
   <script>
     /* ============================================================
@@ -173,7 +186,7 @@
     // Nombre MAXIMUM de paires cover/audio.
     // Tu peux laisser 50 même si tu en as moins : seules les covers
     // réellement présentes dans le dossier s'affichent.
-    const NOMBRE_AUDIOS = 50;
+    const NOMBRE_AUDIOS = 70;
 
     // Dossiers et noms des fichiers
     const DOSSIER_COVERS = "covers/";
