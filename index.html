@@ -2,6 +2,24 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+
+  <script>
+    //* ################################################################
+
+    // 1) SELECTION : les numeros a afficher, dans l'ordre voulu.
+    //    Chaque numero entre guillemets, separes par des virgules.
+    //    Pour TOUT afficher, laisse vide : const SELECTION = [];
+    const SELECTION = ["001", "003", "027", "045"];
+
+    // 2) NOMBRE MAXIMUM de paires cover/audio
+    //    (utilise seulement quand SELECTION est vide).
+    const NOMBRE_AUDIOS = 60;
+
+    /* ################################################################ */
+
+    
+  </script>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Steve50</title>
 
@@ -183,11 +201,6 @@
        RÉGLAGES — c'est ici que tu modifies
        ============================================================ */
 
-    // Nombre MAXIMUM de paires cover/audio.
-    // Tu peux laisser 50 même si tu en as moins : seules les covers
-    // réellement présentes dans le dossier s'affichent.
-    const NOMBRE_AUDIOS = 70;
-
     // Dossiers et noms des fichiers
     const DOSSIER_COVERS = "covers/";
     const DOSSIER_AUDIO  = "audios/";
@@ -220,8 +233,13 @@
       return m + ":" + String(sec).padStart(2, "0");
     }
 
+    // Liste des numéros à afficher : la sélection, ou tout si elle est vide
+    const numerosAffiches = SELECTION.length
+      ? SELECTION.map(n => parseInt(n, 10)).filter(n => n > 0)
+      : Array.from({ length: NOMBRE_AUDIOS }, (_, k) => k + 1);
+
     // Fabrique les cartes automatiquement
-    for (let i = 1; i <= NOMBRE_AUDIOS; i++) {
+    for (const i of numerosAffiches) {
       const num = numero(i);
       const titre = TITRES[i - 1] || "";
 
