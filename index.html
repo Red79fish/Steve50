@@ -10,10 +10,15 @@
        ###                                                          ###
        ################################################################ */
 
+    // 0) IMAGE-TITRE : nom du fichier de l'image en haut de la page
+    //    (dans le dossier "image-titre/").
+    //    Pour ne pas afficher d'image-titre, laisse vide : const IMAGE_TITRE = "";
+    const IMAGE_TITRE = "image-titre.jpg";
+
     // 1) SELECTION : les numeros a afficher, dans l'ordre voulu.
     //    Chaque numero entre guillemets, separes par des virgules.
     //    Pour TOUT afficher, laisse vide : const SELECTION = [];
-    const SELECTION = [49,43];
+    const SELECTION = [49,43,50];
 
     // 2) NOMBRE MAXIMUM de paires cover/audio
     //    (utilise seulement quand SELECTION est vide).
@@ -238,7 +243,7 @@
 <body>
   <div class="container">
     <!-- Image titre : non reliee a un audio -->
-    <img class="image-titre" src="image-titre/image-titre.jpg" alt=""
+    <img class="image-titre" id="image-titre" alt=""
          onerror="this.remove()">
 
     <!-- Bande RANDOM ORDER : cliquer pour activer / desactiver -->
@@ -268,6 +273,11 @@
     /* ============================================================
        NE PAS MODIFIER EN DESSOUS (sauf si tu sais ce que tu fais)
        ============================================================ */
+
+    // Image-titre (nom choisi dans les reglages du haut)
+    const imageTitre = document.getElementById("image-titre");
+    if (IMAGE_TITRE) imageTitre.src = "image-titre/" + IMAGE_TITRE;
+    else imageTitre.remove();
 
     const liste = document.getElementById("liste");
     const audio = new Audio();      // un seul lecteur pour toute la page
