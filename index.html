@@ -18,7 +18,7 @@
     // 1) SELECTION : les numeros a afficher, dans l'ordre voulu.
     //    Chaque numero entre guillemets, separes par des virgules.
     //    Pour TOUT afficher, laisse vide : const SELECTION = [];
-     const SELECTION = [51];
+    const SELECTION = [51];
 
     // 2) NOMBRE MAXIMUM de paires cover/audio
     //    (utilise seulement quand SELECTION est vide).
@@ -261,7 +261,11 @@
     // Dossiers et noms des fichiers
     const DOSSIER_COVERS = "covers/";
     const DOSSIER_AUDIO  = "audios/";
-    // cover-001.jpg  <->  audio-001.mp3
+    // cover-001.jpg (ou .png)  <->  audio-001.mp3
+
+    // Formats acceptes pour les covers, essayes dans cet ordre.
+    // Ex. : si cover-051.jpg n'existe pas, la page essaie cover-051.png, etc.
+    const EXTENSIONS_COVERS = [".jpg", ".png", ".jpeg"];
 
     // Titres optionnels, dans l'ordre (1re ligne = audio-001).
     // Laisse vide ("") pour ne rien afficher sous une cover.
@@ -353,7 +357,7 @@
 
       carte.innerHTML = `
         <button class="cover" type="button" aria-label="Lire ${titre || "l'audio " + num}">
-          <img src="${DOSSIER_COVERS}cover-${num}.jpg" alt="">
+          <img alt="">
           <span class="icone" aria-hidden="true">${ICONE_PLAY}</span>
         </button>
         ${titre ? `<div class="titre">${titre}</div>` : ""}
@@ -377,11 +381,21 @@
       carte.hidden = true;
       liste.appendChild(carte);
 
-      // Test : l'image existe ? -> on montre la carte. Sinon -> on la retire.
+      // Test : on cherche la cover en .jpg, puis .png, puis .jpeg.
+      // Trouvee -> on l'affiche. Aucune trouvee -> on retire la carte.
+      const base = DOSSIER_COVERS + "cover-" + num;
+      let essai = 0;
       const test = new Image();
-      test.onload  = () => { carte.hidden = false; };
-      test.onerror = () => { carte.remove(); };
-      test.src = DOSSIER_COVERS + "cover-" + num + ".jpg";
+      test.onload = () => {
+        carte.querySelector(".cover img").src = test.src;
+        carte.hidden = false;
+      };
+      test.onerror = () => {
+        essai++;
+        if (essai < EXTENSIONS_COVERS.length) test.src = base + EXTENSIONS_COVERS[essai];
+        else carte.remove();
+      };
+      test.src = base + EXTENSIONS_COVERS[0];
     }
 
     function cliquerCover(carte) {
