@@ -3,13 +3,21 @@
 <head>
   <meta charset="UTF-8">
 
-  <script>
-    /* ################################################################
+  <!-- ################################################################
        ###                                                          ###
        ###            ★  REGLAGES DE LA SEMAINE  ★                  ###
        ###                                                          ###
-       ################################################################ */
+       ################################################################
 
+    0) IMAGE-TITRE : image en haut de la page ET image de l'apercu
+       quand on colle le lien (Messages, Facebook, etc.).
+       Change seulement le nom du fichier a la fin de l'adresse
+       (le fichier doit etre dans le dossier "image-titre/").
+       Pour ne pas afficher d'image-titre, laisse vide : content=""
+  -->
+  <meta property="og:image" content="https://red79fish.github.io/Steve50/image-titre/image-titre-show.jpg">
+
+  <script>
     // 1) SELECTION : les numeros a afficher, dans l'ordre voulu.
     //    Chaque numero entre guillemets, separes par des virgules.
     //    Pour TOUT afficher, laisse vide : const SELECTION = [];
@@ -43,6 +51,10 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Steve50</title>
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Steve50">
+  <meta property="og:url" content="https://red79fish.github.io/Steve50/index-show.html">
+  <meta name="twitter:card" content="summary_large_image">
 
   <style>
     :root {
@@ -238,7 +250,7 @@
 <body>
   <div class="container">
     <!-- Image titre : non reliee a un audio -->
-    <img class="image-titre" src="image-titre/image-titre-show.jpg" alt=""
+    <img class="image-titre" id="image-titre" alt=""
          onerror="this.remove()">
 
     <!-- Bande RANDOM ORDER : cliquer pour activer / desactiver -->
@@ -268,6 +280,13 @@
     /* ============================================================
        NE PAS MODIFIER EN DESSOUS (sauf si tu sais ce que tu fais)
        ============================================================ */
+
+    // Image-titre (lue dans la balise og:image du reglage 0, en haut)
+    const balise = document.querySelector('meta[property="og:image"]');
+    const IMAGE_TITRE = balise ? balise.content.trim() : "";
+    const imageTitre = document.getElementById("image-titre");
+    if (IMAGE_TITRE) imageTitre.src = IMAGE_TITRE;
+    else imageTitre.remove();
 
     const liste = document.getElementById("liste");
     const audio = new Audio();      // un seul lecteur pour toute la page
